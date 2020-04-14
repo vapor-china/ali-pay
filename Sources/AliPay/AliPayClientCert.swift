@@ -10,7 +10,7 @@ import ASN1Decoder
 
 extension AliPayClient {
     
-mutating func registerAppPublicCert(_ pemStr: String) throws {
+    mutating func registerAppPublicCert(_ pemStr: String) throws {
         let appPubCertData = pemStr.data(using: .utf8)
         if let certData = appPubCertData {
             let x509 = try X509Certificate(data: certData)

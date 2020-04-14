@@ -38,10 +38,10 @@ public struct AliPayClient {
 
 extension AliPayClient {
     
-    func unifiedOrder(params content: AliUnifiedOrderPramas, notifyUrl: String) throws -> String {
+    public func unifiedOrder(params content: AliUnifiedOrderPramas, notifyUrl: String) throws -> String {
         
         let bizContent = try serialization(params: content)
-        let alipay = AlipayPramas(method: AliPayMethod.appPay.name, charset: charset, timestamp: AliSignTool.getCurrentTime(format: "yyyy-MM-dd HH:mm:ss"), notify_url: notifyUrl, biz_content: bizContent)
+        var alipay = AlipayPramas(method: AliPayMethod.appPay.name, charset: charset, timestamp: AliSignTool.getCurrentTime(format: "yyyy-MM-dd HH:mm:ss"), notify_url: notifyUrl, biz_content: bizContent)
         let paramsDic = fillCertData(params: alipay)
         let signStr = AliPaySign.generateStr(params: paramsDic)
         let plainText = try CryptorRSA.createPlaintext(with: signStr, using: .utf8)
@@ -75,7 +75,7 @@ extension AliPayClient {
         return jsonStr
     }
     
-    func generateRequestStr(params: AliParams) -> String {
+    func generateRequestStr<C: Content>(params: C) -> String {
 //        let dic = MirrorExt.generateDic(model: params)
         let dic = fillCertData(params: params)
         let dic2 = dic.sorted { (k1, k2) -> Bool in
@@ -95,7 +95,7 @@ extension AliPayClient {
 
 extension AliPayClient {
     
-    func fillCertData(params: AliParams) -> [String: String] {
+    func fillCertData<C: Content>(params: C) -> [String: String] {
         var dic = MirrorExt.generateDic(model: params)
         if let appCertSN = appCertSN {
             dic["app_cert_sn"] = appCertSN

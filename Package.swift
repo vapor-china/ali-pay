@@ -12,7 +12,7 @@ let package = Package(
         .library(name: "AliPay", targets: ["AliPay"])
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0-rc"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.1"),
         .package(url: "https://github.com/vapor-china/ASN1Decoder.git", from: "1.3.4"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.0.0"),
@@ -26,9 +26,6 @@ let package = Package(
             .product(name: "BigInt", package: "BigInt"),
             .product(name: "CryptorRSA", package: "CryptorRSA")
         ]),
-        .testTarget(
-            name: "AliPayTests",
-            dependencies: ["AliPay"]
-        )
+        
     ]
 )

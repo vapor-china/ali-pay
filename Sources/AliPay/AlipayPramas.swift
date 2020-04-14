@@ -7,7 +7,7 @@
 
 import Vapor
 
-final public class AlipayPramas: AliParams, Content {
+public struct AlipayPramas: Content {
     public init(method: String, charset: String, sign: String = "", timestamp: String, notify_url: String, biz_content: String) {
         self.method = method
         self.charset = charset
@@ -15,13 +15,8 @@ final public class AlipayPramas: AliParams, Content {
         self.timestamp = timestamp
         self.notify_url = notify_url
         self.biz_content = biz_content
-        super.init()
     }
-    
-    required init(from decoder: Decoder) throws {
-        fatalError("init(from:) has not been implemented")
-    }
-    
+
     let method: String
     let format = "JSON"
     let charset: String

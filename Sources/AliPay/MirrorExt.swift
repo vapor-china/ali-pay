@@ -17,15 +17,11 @@ class MirrorExt {
         var mirror: Mirror? = Mirror(reflecting: model)
         repeat {
             for (fkey,fval) in mirror!.children {
-                print("\(String(describing: fkey))")
                 if case Optional<Any>.none = fval {
-//                    print("nil")
                     continue
                 }
-                print("\(String(describing: fkey)) -- \(fval)")
                 var val = ""
                 if  case Optional.some(let value) = fval as? String {
-                    print(value)
                     val = value
                 } else if  case Optional.some(let value) = fval as? Int {
                     val = "\(value)"

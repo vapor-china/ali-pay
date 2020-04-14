@@ -6,7 +6,3 @@
 //
 
 import Vapor
-
-public class AliParams: Codable {
-    
-}
