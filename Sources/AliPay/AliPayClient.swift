@@ -41,7 +41,7 @@ extension AliPayClient {
     func unifiedOrder(params content: AliUnifiedOrderPramas, notifyUrl: String) throws -> String {
         
         let bizContent = try serialization(params: content)
-        var alipay = AlipayPramas(method: AliPayMethod.appPay.name, charset: charset, timestamp: AliSignTool.getCurrentTime(format: "yyyy-MM-dd HH:mm:ss"), notify_url: notifyUrl, biz_content: bizContent)
+        let alipay = AlipayPramas(method: AliPayMethod.appPay.name, charset: charset, timestamp: AliSignTool.getCurrentTime(format: "yyyy-MM-dd HH:mm:ss"), notify_url: notifyUrl, biz_content: bizContent)
         let paramsDic = fillCertData(params: alipay)
         let signStr = AliPaySign.generateStr(params: paramsDic)
         let plainText = try CryptorRSA.createPlaintext(with: signStr, using: .utf8)
@@ -65,7 +65,7 @@ extension AliPayClient {
 }
 extension AliPayClient {
     
-    func serialization(params: AliParams) throws -> String {
+    func serialization<T: Content>(params: T) throws -> String {
         
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
@@ -76,8 +76,8 @@ extension AliPayClient {
     }
     
     func generateRequestStr(params: AliParams) -> String {
-        let dic = MirrorExt.generateDic(model: params)
-        
+//        let dic = MirrorExt.generateDic(model: params)
+        let dic = fillCertData(params: params)
         let dic2 = dic.sorted { (k1, k2) -> Bool in
             return k1.key < k2.key
         }

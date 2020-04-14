@@ -7,9 +7,9 @@
 
 import Vapor
 
-final public class AliUnifiedOrderPramas: AliParams, Content {
+final public class AliUnifiedOrderPramas: Content {
   
-  public init(body: String? = nil, subject: String, out_trade_no: String, tiemout_express: String? = nil, total_amount: String, product_code: String, goods_type: String? = nil, goods_detail: [String]? = nil, passback_params: String? = nil, promo_params: String? = nil, extend_params: String? = nil, enable_pay_channels: String? = nil, disable_pay_channels: String? = nil, store_id: String? = nil, ext_user_info: ExtUserInfo? = nil) {
+  public init(body: String? = nil, subject: String, out_trade_no: String, tiemout_express: String? = nil, total_amount: String, product_code: String? = nil, goods_type: String? = nil, goods_detail: [String]? = nil, passback_params: String? = nil, promo_params: String? = nil, extend_params: String? = nil, enable_pay_channels: String? = nil, disable_pay_channels: String? = nil, store_id: String? = nil, ext_user_info: ExtUserInfo? = nil) {
       self.body = body
       self.subject = subject
       self.out_trade_no = out_trade_no
@@ -25,9 +25,9 @@ final public class AliUnifiedOrderPramas: AliParams, Content {
       self.disable_pay_channels = disable_pay_channels
       self.store_id = store_id
       self.ext_user_info = ext_user_info
-    super.init()
-  }
     
+  }
+    /*
     private enum CodingKeys: String, CodingKey {
         case body
         case subject
@@ -46,7 +46,7 @@ final public class AliUnifiedOrderPramas: AliParams, Content {
         case ext_user_info
     }
     
-    required init(from decoder: Decoder) throws {
+    required public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.body = try container.decode(String.self, forKey: .body)
         self.subject = try container.decode(String.self, forKey: .subject)
@@ -63,9 +63,8 @@ final public class AliUnifiedOrderPramas: AliParams, Content {
         self.disable_pay_channels = try container.decode(String.self, forKey: .disable_pay_channels)
         self.store_id = try container.decode(String.self, forKey: .store_id)
         self.ext_user_info = try container.decode(ExtUserInfo.self, forKey: .ext_user_info)
-        try super.init(from: decoder)
     }
-    
+    */
  
     
   let body: String?
@@ -73,7 +72,7 @@ final public class AliUnifiedOrderPramas: AliParams, Content {
   let out_trade_no: String
   let tiemout_express: String?
   let total_amount: String
-  let product_code: String
+  let product_code: String?
   let goods_type: String?
   let goods_detail: [String]?
   let passback_params: String?
