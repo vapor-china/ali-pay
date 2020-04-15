@@ -57,7 +57,7 @@ extension String {
     func aliSpecialUrlEncode() -> String {
         
         let encode = self.urlEncoded()
-        
+        /*
         var finish = encode.replacingOccurrences(of: "+", with: "%20")
         finish = finish.replacingOccurrences(of: "*", with: "%2A")
         finish = finish.replacingOccurrences(of: "~", with: "%7E")
@@ -67,7 +67,7 @@ extension String {
         finish = finish.replacingOccurrences(of: "/", with: "%2F")
         finish = finish.replacingOccurrences(of: "=", with: "%3D")
         finish = finish.replacingOccurrences(of: "&", with: "%26")
-        
+        */
         return finish
     }
 }
@@ -75,9 +75,9 @@ extension String {
 extension String {
 
     //将原始的url编码为合法的url
-    func urlEncoded() -> String {
+    func urlEncoded(character: CharacterSet = .alphanumerics) -> String {
         let encodeUrlString = self.addingPercentEncoding(withAllowedCharacters:
-            .urlQueryAllowed)
+            character)
         return encodeUrlString ?? ""
     }
 

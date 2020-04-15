@@ -16,7 +16,7 @@ public struct AliPayClient {
     
     var isProduction = false
     
-    init(appid: String, private key: String) throws {
+    public init(appid: String, private key: String) throws {
         self.appid = appid
         self.privateKey = key
         self.privateRsaKey = try self.parsePrivateKey(from: key)
