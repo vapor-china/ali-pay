@@ -56,7 +56,7 @@ extension String {
     
     func aliSpecialUrlEncode() -> String {
         
-        let encode = self.urlEncoded()
+        let encode = self.urlEncoded(character: .aliPayEscapeAllowed)
         /*
         var finish = encode.replacingOccurrences(of: "+", with: "%20")
         finish = finish.replacingOccurrences(of: "*", with: "%2A")
@@ -67,8 +67,16 @@ extension String {
         finish = finish.replacingOccurrences(of: "/", with: "%2F")
         finish = finish.replacingOccurrences(of: "=", with: "%3D")
         finish = finish.replacingOccurrences(of: "&", with: "%26")
+        finish = finish.replacingOccurrences(of: ",", with: "%2c")
+         return finish
         */
-        return finish
+        return encode
+    }
+}
+
+extension CharacterSet {
+    public static var aliPayEscapeAllowed: CharacterSet {
+        CharacterSet(charactersIn: "!*'();:@&=+$,/?%#[]{}\"").inverted
     }
 }
 
