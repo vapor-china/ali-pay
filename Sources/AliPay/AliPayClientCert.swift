@@ -40,4 +40,15 @@ extension AliPayClient {
     
     private var beginPemBlock: String { "-----BEGIN CERTIFICATE-----" }
     private var endPemBlock: String { "-----END CERTIFICATE-----" }
+    
+    mutating public func registerAliPayPublicCert(_ pemStr: String) throws {
+        if let certData = pemStr.data(using: .utf8) {
+            let x509 = try X509Certificate(data: certData)
+            let sn = try AliPaySign.getCertSN(x509)
+            let key = parsePublicKey(from: pemStr)
+            publicKeyDic[sn] = key
+            aliPublicCertSN = sn
+        }
+        
+    }
 }

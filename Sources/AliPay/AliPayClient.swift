@@ -13,8 +13,7 @@ public struct AliPayClient {
     let appid: String
     let privateKey: String
     
-    
-    var isProduction = false
+    var isProduction = AliPayEnvir.product
     
     public init(appid: String, private key: String) throws {
         self.appid = appid
@@ -24,16 +23,17 @@ public struct AliPayClient {
     
     var appCertSN: String?
     var alipayRootCertSN: String?
+    var aliPublicCertSN: String?
     
     var privateRsaKey: CryptorRSA.PrivateKey?
+    var publicRsaKey: CryptorRSA.PublicKey?
     
-    let format = "JSON"
-    let charset = "utf-8"
+    var publicKeyDic = [String: CryptorRSA.PublicKey]()
+    
+    let format = Format.JSON
+    let charset = Charset.utf8
     var signType = SignType.RSA2
-    enum SignType: String {
-        case RSA
-        case RSA2
-    }
+    let timeFormat = TimeFormat.YYYYgMMgDDkHHcmmcss
 }
 
 extension AliPayClient {
@@ -41,7 +41,7 @@ extension AliPayClient {
     public func unifiedOrder(params content: AliUnifiedOrderPramas, notifyUrl: String) throws -> String {
         
         let bizContent = try serialization(params: content)
-        var alipay = AlipayPramas(method: AliPayMethod.appPay.name, charset: charset, timestamp: AliSignTool.getCurrentTime(format: "yyyy-MM-dd HH:mm:ss"), notify_url: notifyUrl, biz_content: bizContent)
+        var alipay = AlipayPramas(method: AliPayMethod.appPay.name, charset: charset.name, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), notify_url: notifyUrl, biz_content: bizContent)
         let paramsDic = fillCertData(params: alipay)
         let signStr = AliPaySign.generateStr(params: paramsDic)
         let plainText = try CryptorRSA.createPlaintext(with: signStr, using: .utf8)
@@ -60,7 +60,68 @@ extension AliPayClient {
         return generateRequestStr(params: alipay)
     }
     
+    public func dealwithCallback(req: Request) throws -> AliPayCallbackResp {
+        
+        let resp = try req.content.decode(AliPayCallbackResp.self)
+        
+        guard let publicKey = publicRsaKey  else {
+            throw AlipayError(reason: "公钥不存在")
+        }
+        
+        return resp
+    }
     
+    func verifySign(resp: AliPayCallbackResp) throws {
+        
+        let sn = resp.alipay_cert_sn
+        try getAliPayPublicKey(cert: sn)
+    }
+    
+    struct CertDownload: Content {
+        let app_auth_token: String?
+        let alipay_cert_sn: String
+    }
+    
+    struct CertDownloadResp: Content {
+        let sign: String
+        let alipay_open_app_alipaycert_download_response: CertDownloadRespContent
+    }
+    
+    struct CertDownloadRespContent: Content {
+        let code: String
+        let msg: String
+        let sub_code: String
+        let sub_msg: String
+        let alipay_cert_content: String
+    }
+    
+    func getAliPayPublicKey(cert sn: String?) throws -> CryptorRSA.PublicKey {
+        
+        var sn = sn ?? ""
+        if sn.isEmpty {
+            guard let certSN = aliPublicCertSN, !certSN.isEmpty else { throw AlipayError(reason: "") }
+            sn = certSN
+        }
+        
+        if let key = publicKeyDic[sn] {
+            return key
+        }
+        
+        if isProduction == .product {
+            
+        }
+        
+    }
+    
+    func download(cert sn: String, req: Request) {
+        
+        var down = CertDownload(app_auth_token: nil, alipay_cert_sn: sn)
+        req.client.post(isProduction.uri) { req in
+            try req.content.encode(down)
+        }.flatMapThrowing { (resp) -> CertDownloadResp in
+           return try resp.content.decode(CertDownloadResp.self)
+        }
+    }
     
 }
 extension AliPayClient {

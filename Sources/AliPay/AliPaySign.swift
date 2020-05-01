@@ -94,9 +94,15 @@ extension AliPaySign {
 
 
 extension AliPayClient {
-        func parsePrivateKey(from base64key: String) throws -> CryptorRSA.PrivateKey {
-             
-             let rsa = try CryptorRSA.createPrivateKey(withBase64: base64key)
-             return rsa
-         }
+    func parsePrivateKey(from base64key: String) throws -> CryptorRSA.PrivateKey {
+        
+        let rsa = try CryptorRSA.createPrivateKey(withBase64: base64key)
+        return rsa
+    }
+    
+    func parsePublicKey(from base64key: String) throws -> CryptorRSA.PublicKey {
+        
+        let publickey = try CryptorRSA.createPublicKey(withPEM: base64key)
+        return publickey
+    }
 }
