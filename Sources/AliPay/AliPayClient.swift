@@ -7,6 +7,7 @@
 
 import Vapor
 import CryptorRSA
+import ASN1Decoder
 
 public struct AliPayClient {
     
@@ -28,7 +29,7 @@ public struct AliPayClient {
     var privateRsaKey: CryptorRSA.PrivateKey?
     var publicRsaKey: CryptorRSA.PublicKey?
     
-    var publicKeyDic = [String: CryptorRSA.PublicKey]()
+    var publicKeyDic = [String: ASN1Decoder.X509PublicKey]()
     
     let format = Format.JSON
     let charset = Charset.utf8
@@ -95,7 +96,7 @@ extension AliPayClient {
         let alipay_cert_content: String
     }
     
-    func getAliPayPublicKey(cert sn: String?) throws -> CryptorRSA.PublicKey {
+    func getAliPayPublicKey(cert sn: String?) throws -> ASN1Decoder.X509PublicKey? {
         
         var sn = sn ?? ""
         if sn.isEmpty {
@@ -110,7 +111,7 @@ extension AliPayClient {
         if isProduction == .product {
             
         }
-        
+        return nil
     }
     
     func download(cert sn: String, req: Request) {

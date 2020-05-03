@@ -101,8 +101,20 @@ extension AliPayClient {
     }
     
     func parsePublicKey(from base64key: String) throws -> CryptorRSA.PublicKey {
+        var resultBase = base64key
+        if resultBase.contains(beginPemBlock) {
+           resultBase = resultBase.replacingOccurrences(of: beginPemBlock, with: "")
+        }
+        if resultBase.contains(endPemBlock) {
+            resultBase = resultBase.replacingOccurrences(of: endPemBlock, with: "")
+        }
+        print(resultBase)
         
-        let publickey = try CryptorRSA.createPublicKey(withPEM: base64key)
+//        try CryptorRSA.createPublicKey(withBase64: resultBase)
+        let publickey = try CryptorRSA.createPublicKey(withBase64: resultBase) // CryptorRSA.createPublicKey(withPEM: resultBase)
         return publickey
     }
+    
+    private var beginPemBlock: String { "-----BEGIN CERTIFICATE-----" }
+    private var endPemBlock: String { "-----END CERTIFICATE-----" }
 }
