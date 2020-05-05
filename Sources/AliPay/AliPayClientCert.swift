@@ -58,7 +58,7 @@ extension AliPayClient {
 //                    certSNArray.append(sn)
                     if let publicKey = cert.publicKey {
 //                        print(publicKey)
-                        publicKeyDic[sn] = publicKey
+//                        publicKeyDic[sn] = publicKey
                     }
                 }
 //                cert.publicKey
@@ -82,7 +82,7 @@ extension AliPayClient {
 //                }
 //            }
 //        }
-        print(certStrArray)
+//        print(certStrArray)
 //        print(certSNArray)
         
         

@@ -9,10 +9,12 @@ import Vapor
 
 public enum AliPayMethod {
     case appPay
+    case certDownload
     
     var name: String {
         switch self {
         case .appPay: return "alipay.trade.app.pay"
+        case .certDownload: return "alipay.open.app.alipaycert.download"
         }
     }
 }
@@ -43,11 +45,11 @@ public enum AliPayEnvir {
     }
 }
 
-enum Format: String {
+public enum Format: String {
     case JSON
 }
 
-enum Charset {
+public enum Charset {
     case utf8
     
     var name: String {
@@ -57,7 +59,7 @@ enum Charset {
     }
 }
 
-enum SignType: String {
+public enum SignType: String {
     case RSA
     case RSA2
 }
@@ -78,7 +80,7 @@ enum TimeFormat {
     
     var format: String {
         switch self {
-        case .YYYYgMMgDDkHHcmmcss: return "YYYY-MM-DD HH:mm:ss"
+        case .YYYYgMMgDDkHHcmmcss: return "yyyy-MM-dd HH:mm:ss"
         }
     }
 }

@@ -39,10 +39,29 @@ public struct AliPayClient {
 
 extension AliPayClient {
     
+    func sign<P: AlipayParams>(params: P) throws -> P {
+        var alipay = params
+        let paramsDic = fillCertData(params: alipay)
+        let signStr = AliPaySign.generateStr(params: paramsDic)
+        let plainText = try CryptorRSA.createPlaintext(with: signStr, using: .utf8)
+        var sign = ""
+        if let rsa = privateRsaKey {
+           let signature = try plainText.signed(with: rsa, algorithm: .sha256)
+            if let signtrueData = signature {
+               sign = signtrueData.base64String
+            }
+        }
+        guard !sign.isEmpty else {
+            throw AlipayError(reason: "签名异常")
+        }
+        alipay.sign = sign
+        return alipay
+    }
+    
     public func unifiedOrder(params content: AliUnifiedOrderPramas, notifyUrl: String) throws -> String {
         
         let bizContent = try serialization(params: content)
-        var alipay = AlipayPramas(method: AliPayMethod.appPay.name, charset: charset.name, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), notify_url: notifyUrl, biz_content: bizContent)
+        var alipay = AlipayUnifiedParamas(appid: appid, method: AliPayMethod.appPay.name, charset: charset.name, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), notify_url: notifyUrl, biz_content: bizContent)
         let paramsDic = fillCertData(params: alipay)
         let signStr = AliPaySign.generateStr(params: paramsDic)
         let plainText = try CryptorRSA.createPlaintext(with: signStr, using: .utf8)
@@ -61,28 +80,29 @@ extension AliPayClient {
         return generateRequestStr(params: alipay)
     }
     
-    public func dealwithCallback(req: Request) throws -> AliPayCallbackResp {
+    public func dealwithCallback(req: Request) throws -> EventLoopFuture<Response> {
         
         let resp = try req.content.decode(AliPayCallbackResp.self)
         
-        guard let publicKey = publicRsaKey  else {
-            throw AlipayError(reason: "公钥不存在")
+//        guard let publicKey = publicRsaKey  else {
+//            throw AlipayError(reason: "公钥不存在")
+//        }
+        if let sign = try verifySign(resp: resp, req: req) {
+//            return sign.flatMap { (content) -> EventLoopFuture<AliPayCallbackResp> in
+//                print(content)
+//                return req.eventLoop.future(resp)
+//            }.flatMap { $0.encodeResponse(for: req) }
+            return sign
         }
-        
-        return resp
+        return "falied".encodeResponse(for: req)
+//        return req.eventLoop.future(resp).flatMap { $0.encodeResponse(for: req) }
     }
     
-    func verifySign(resp: AliPayCallbackResp) throws {
+    func verifySign(resp: AliPayCallbackResp, req: Request) throws -> EventLoopFuture<Response>? {
         
         let sn = resp.alipay_cert_sn
-        try getAliPayPublicKey(cert: sn)
+        return try getAliPayPublicKey(cert: sn, req: req)
     }
-    
-    struct CertDownload: Content {
-        let app_auth_token: String?
-        let alipay_cert_sn: String
-    }
-    
     struct CertDownloadResp: Content {
         let sign: String
         let alipay_open_app_alipaycert_download_response: CertDownloadRespContent
@@ -96,7 +116,7 @@ extension AliPayClient {
         let alipay_cert_content: String
     }
     
-    func getAliPayPublicKey(cert sn: String?) throws -> ASN1Decoder.X509PublicKey? {
+    func getAliPayPublicKey(cert sn: String?, req: Request) throws -> EventLoopFuture<Response>? { //ASN1Decoder.X509PublicKey? {
         
         var sn = sn ?? ""
         if sn.isEmpty {
@@ -105,26 +125,54 @@ extension AliPayClient {
         }
         
         if let key = publicKeyDic[sn] {
-            return key
+//            return key
+            return nil
         }
         
         if isProduction == .product {
-            
+            return try download(cert: sn, req: req)
+//                .map { (resp) -> CertDownloadRespContent in
+//               return resp.alipay_open_app_alipaycert_download_response
+//            }
         }
         return nil
     }
     
-    func download(cert sn: String, req: Request) {
+    func download(cert sn: String, req: Request) throws -> EventLoopFuture<Response> {
         
-        var down = CertDownload(app_auth_token: nil, alipay_cert_sn: sn)
-        req.client.post(isProduction.uri) { req in
-            try req.content.encode(down)
-        }.flatMapThrowing { (resp) -> CertDownloadResp in
-           return try resp.content.decode(CertDownloadResp.self)
+        let down = CertDownload(alipay_cert_sn: sn)
+//        let param = CertDownloadParam(app_id: appid, method: AliPayMethod.certDownload.name, format: format.rawValue, charset: charset.name, sign_type: signType.rawValue, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), app_cert_sn: sn, alipay_root_cert_sn: nil)
+        
+        let bizContent = try serialization(params: down)
+//        var alipay = AlipayPramas(method: AliPayMethod.certDownload.name, charset: charset.name, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), notify_url: notifyUrl, biz_content: bizContent)
+        let alipay = CertDownloadParam(appid: appid, method: .certDownload, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), bizContent: bizContent)
+        let param = try sign(params: alipay)
+       
+        let result = req.client.post(isProduction.uri, headers: ["Content-Type": "application/x-www-form-urlencoded;charset=utf-8"]) { req in
+//            req.headers.contentType = .urlEncodedForm
+            
+            try req.content.encode(param, as: .urlEncodedForm)
+        }.flatMapThrowing { (resp) -> ClientResponse in
+//            resp.body?.getString(at: 0, length: resp.body!.capacity, encoding: .utf8)
+//           return try resp.content.decode(CertDownloadResp.self)
+            
+//            return try resp.encodeResponse(for: req)
+            return resp
+        }
+    
+        return result.flatMap { (rp) -> EventLoopFuture<Response> in
+            return try! rp.encodeResponse(for: req)
         }
     }
     
 }
+
+extension ByteBuffer {
+    var string: String {
+        .init(decoding: self.readableBytesView, as: UTF8.self)
+    }
+}
+
 extension AliPayClient {
     
     func serialization<T: Content>(params: T) throws -> String {
@@ -165,9 +213,10 @@ extension AliPayClient {
         if let alipayRootCertSN = alipayRootCertSN {
             dic["alipay_root_cert_sn"] = alipayRootCertSN
         }
-        dic["app_id"] = appid
+//        dic["app_id"] = appid
         
         return dic
     }
 }
+
 
