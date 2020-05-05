@@ -41,7 +41,7 @@ extension AliPayClient {
     
     func sign<P: AlipayParams>(params: P) throws -> P {
         var alipay = params
-        let paramsDic = fillCertData(params: alipay)
+        let paramsDic = fillCertData(params: alipay, appCert: true)
         let signStr = AliPaySign.generateStr(params: paramsDic)
         let plainText = try CryptorRSA.createPlaintext(with: signStr, using: .utf8)
         var sign = ""
@@ -147,11 +147,17 @@ extension AliPayClient {
 //        var alipay = AlipayPramas(method: AliPayMethod.certDownload.name, charset: charset.name, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), notify_url: notifyUrl, biz_content: bizContent)
         let alipay = CertDownloadParam(appid: appid, method: .certDownload, timestamp: AliSignTool.getCurrentTime(format: timeFormat.format), bizContent: bizContent)
         let param = try sign(params: alipay)
+        let requestParam = generateRequestStr(params: param)
        
         let result = req.client.post(isProduction.uri, headers: ["Content-Type": "application/x-www-form-urlencoded;charset=utf-8"]) { req in
 //            req.headers.contentType = .urlEncodedForm
-            
-            try req.content.encode(param, as: .urlEncodedForm)
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+//            try encoder.encode(encodable, to: &body, headers: &self.request.headers)
+//            self.request.bodyStorage = .collected(body)
+//            try req.content.encode(param, as: .urlEncodedForm)
+//            body.setString(requestParam, at: requestParam.count)
+            body.writeString(requestParam)
+            req.body = body
         }.flatMapThrowing { (resp) -> ClientResponse in
 //            resp.body?.getString(at: 0, length: resp.body!.capacity, encoding: .utf8)
 //           return try resp.content.decode(CertDownloadResp.self)
@@ -205,8 +211,9 @@ extension AliPayClient {
 
 extension AliPayClient {
     
-    func fillCertData<C: Content>(params: C) -> [String: String] {
+    func fillCertData<C: Content>(params: C, appCert: Bool = true) -> [String: String] {
         var dic = MirrorExt.generateDic(model: params)
+        if appCert {
         if let appCertSN = appCertSN {
             dic["app_cert_sn"] = appCertSN
         }
@@ -214,7 +221,7 @@ extension AliPayClient {
             dic["alipay_root_cert_sn"] = alipayRootCertSN
         }
 //        dic["app_id"] = appid
-        
+        }
         return dic
     }
 }
