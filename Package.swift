@@ -17,6 +17,7 @@ let package = Package(
         .package(url: "https://github.com/vapor-china/ASN1Decoder.git", from: "1.3.4"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.0.0"),
         .package(url: "https://github.com/vapor-china/CryptorRSA.git", from: "1.0.35"),
+        .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0-rc.1"),
     ],
     targets: [
         .target(name: "AliPay", dependencies: [
@@ -24,7 +25,8 @@ let package = Package(
             .product(name: "Crypto", package: "swift-crypto"),
             .product(name: "ASN1Decoder", package: "ASN1Decoder"),
             .product(name: "BigInt", package: "BigInt"),
-            .product(name: "CryptorRSA", package: "CryptorRSA")
+            .product(name: "CryptorRSA", package: "CryptorRSA"),
+            .product(name: "JWTKit", package: "jwt-kit"),
         ]),
         
     ]

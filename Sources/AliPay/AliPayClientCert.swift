@@ -9,6 +9,8 @@ import Foundation
 import ASN1Decoder
 import CryptorRSA
 import Crypto
+import JWTKit
+import NIOSSL
 
 extension AliPayClient {
     
@@ -52,15 +54,30 @@ extension AliPayClient {
         if certStrArray.count > 0 {
             let certStr = certStrArray[0] + endPemBlock
             if let certData = certStr.data(using: .utf8) {
+                
+//                let key = try RSAKey.public(pem: pemStr.data(using: .utf8)!)
+//                print(key)
                 let cert = try X509Certificate(data: certData)
                 if cert.isSigAlgEncrySHA256ORSHA1 {
                     let sn = try AliPaySign.getCertSN(cert)
                     aliPublicCertSN = sn
 //                    certSNArray.append(sn)
-                    if let publicKey = cert.publicKey {
+                    if let publicKey = cert.publicKey, let data = publicKey.key {
 //                        print(publicKey)
 //                        publicKeyDic[sn] = publicKey
+//                        let key = try RSAKey.public(pem: data)
+                        let nioPubKey = try NIOSSLCertificate.init(bytes: .init(pemStr.utf8), format: .pem).extractPublicKey()
+                        let der = try nioPubKey.toSPKIBytes()
+//                        RSAKey.public(pem: <#T##DataProtocol#>)
+                        
+                        
+                        let key = try CryptorRSA.PublicKey(with: Data(der))
+//                        CryptorRSA.createPublicKey(withDERNamed: <#T##String#>)
+                        
+                        
+                        print(key)
                     }
+                    
                 }
 //                cert.publicKey
             }
@@ -80,6 +97,9 @@ extension AliPayClient {
                 if certStrArray.count > 0 {
                     let certStr = certStrArray[0] + endPemBlock
                     if let certData = certStr.data(using: .utf8) {
+                        
+                        
+                        
                         let cert = try X509Certificate(data: certData)
 //                        let cyrptor = try CryptorRSA.createPublicKey(withPEM: pemStr)
 //                        let base64String = try CryptorRSA.base64String(for: certStr)
